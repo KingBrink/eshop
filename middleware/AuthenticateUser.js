@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import jwt from 'jsonwebtoken'
 const { sign, verify } = jwt
+
 function createToken(user) {
     return sign(
         {
@@ -13,24 +14,25 @@ function createToken(user) {
         }
     )
 }
-function verifyAToken(req, res, next){
+function verifyAToken(req, res, next) {
     const token = req?.headers["authorization"]
-    if (token){
-        if (verify(token, process.env.SECRET_KEY)){
+    if (token) {
+        if (verify(token, process.env.SECRET_KEY)) {
             next()
-        } else{
+        } else {
             res?.json({
                 status: res.statusCode,
-                msg: "Please provide the correct credentials"
+                msg: "Please provide the correct credentials."
             })
         }
-    } else{
+    } else {
         res?.json({
             status: res.statusCode,
             msg: "Please login."
         })
     }
 }
+
 export {
     createToken, verifyAToken
 }

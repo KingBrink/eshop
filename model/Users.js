@@ -1,16 +1,16 @@
 import { connection as db } from '../config/index.js'
-import { createToken } from "../middleware/AuthenticateUser.js"
+import { createToken } from '../middleware/AuthenticateUser.js'
 import { compare, hash } from 'bcrypt'
+
 class Users {
     fetchUsers(req, res) {
         try {
             const strQry = `
-            SELECT firstName, lastName, age,
-            emailAdd, pwd, userRole, profileURL
-            FROM Users
-            `
+        SELECT firstName, lastName, age, emailAdd, userRole, profileURL
+        FROM Users;
+        `
             db.query(strQry, (err, results) => {
-                if (err) throw new Error(`Unable to fetch all users`)
+                if (err) throw new Error('Issue when retrieving all users.')
                 res.json({
                     status: res.statusCode,
                     results
@@ -23,33 +23,32 @@ class Users {
             })
         }
     }
-    fetchUser(req, res) {
+    fetchUser(req, res) { 
         try {
             const strQry = `
-            SELECT firstName, lastName, age,
-            emailAdd, pwd, userRole, profileURL
-            FROM Users
-            WHERE userID = ${req.params.id}
-            `
+        SELECT userID, firstName, lastName, age, emailAdd, userRole, profileURL
+        FROM Users
+        WHERE userID = ${req.params.id};
+        `
             db.query(strQry, (err, result) => {
-                if (err) throw new Error("Issue when retrieving a user")
+                if (err) throw new Error('Issue when retrieving a user.')
                 res.json({
-                    status: res.statusCode,
-                    result
-                })
+                        status: res.statusCode,
+                        result: result[0]
+                    })
             })
         } catch (e) {
             res.json({
                 status: 404,
-                msg: e.message
+                msg: 'Please try again later.'
             })
         }
     }
-    async registerUser(req, res) {
+    async registerUser(req, res) { 
         try {
             let data = req.body
             data.pwd = await hash(data.pwd, 12)
-            //Payload
+            // Payload
             let user = {
                 emailAdd: data.emailAdd,
                 pwd: data.pwd
@@ -62,36 +61,40 @@ class Users {
                 if (err) {
                     res.json({
                         status: res.statusCode,
-                        msg: "This email has already been taken"
+                        msg: 'This email has already been taken'
                     })
                 } else {
                     const token = createToken(user)
                     res.json({
                         token,
-                        msg: "You are now registered."
+                        msg: 'You are now registered.'
                     })
                 }
             })
         } catch (e) {
-        }
+            // 'Unable to add a new user.'
+            res.json({
+                status: 404,
+                msg: e.message
+            })
+        } 
     }
-    async updateUser(req, res) {
+    async updateUser(req, res) { 
         try {
             let data = req.body
             if (data.pwd) {
                 data.pwd = await hash(data.pwd, 12)
             }
             const strQry = `
-    UPDATE Users
-    SET ?
-    WHERE userID = ${req.params.id};
-    `
+        UPDATE Users
+        SET ?
+        WHERE userID = ${req.params.id}
+        `
             db.query(strQry, [data], (err) => {
-                //"Unable to update user"
-                if (err) throw new Error(err)
+                if (err) throw new Error('Unable to update a user')
                 res.json({
                     status: res.statusCode,
-                    msg: "User updated"
+                    msg: 'The user record was updated.'
                 })
             })
         } catch (e) {
@@ -100,8 +103,29 @@ class Users {
                 msg: e.message
             })
         }
+
     }
-    login(req, res) {
+    deleteUser(req, res) {
+        try {
+            const strQry = `
+        DELETE FROM Users
+        WHERE userID = ${req.params.id};
+        `
+            db.query(strQry, (err) => {
+                if (err) throw new Error('To delete a user, please review your delete query.')
+                res.json({
+                    status: res.statusCode,
+                    msg: 'A user\'s information was removed.'
+                })
+            })
+        } catch (e) {
+            res.json({
+                status: 404,
+                msg: e.message
+            })
+        }
+    }
+    async login(req, res) { 
         try {
             const { emailAdd, pwd } = req.body
             const strQry = `
@@ -133,7 +157,7 @@ class Users {
                     } else {
                         res.json({
                             status: 401,
-                            msg: 'You provided a wrong password.'
+                            msg: 'Invalid password or you have not registered'
                         })
                     }
                 }
@@ -145,32 +169,10 @@ class Users {
             })
         }
     }
-    deleteUser(req, res) {
-        try {
-            const strQry = `
-        DELETE FROM Users
-        WHERE userID = ${req.params.id};
-        `
-            db.query(strQry, (err) => {
-                if (err) throw new Error("To delete user, please review your delete query")
-                res.json({
-                    status: res.statusCode,
-                    msg: "A Users information was removed."
-                })
-            })
-        } catch (e) {
-            res.json({
-                status: 404,
-                msg: e.message
-            })
-        }
-    }
 }
-export {
+export { 
     Users
 }
-
-
 
 
 

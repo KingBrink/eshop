@@ -1,6 +1,8 @@
-import { Users } from "./Users";
-
+import { Users } from "./Users.js";
+import { Products } from "./Products.js";
 const users = new Users()
-export {
-    users
+const products = new Products()
+export { 
+    users,
+    products
 }
